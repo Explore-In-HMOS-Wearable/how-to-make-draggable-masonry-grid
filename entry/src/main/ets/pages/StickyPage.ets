@@ -44,16 +44,6 @@ export struct StickyPage {
     }
   };
 
-  // getResourceStringArray(resource: Resource): Array<string> {
-  //   let result: Array<string> = new Array<string>();
-  //   try {
-  //     result = getContext(this).resourceManager.getStringArrayValueSync(resource.id);
-  //   } catch (e) {
-  //     hilog.error(0x0000, TAG, `[getResourceString]getStringSync failed, error:${JSON.stringify(e)}.`);
-  //   }
-  //   return result;
-  // }
-
   getSize() {
     let ret = Math.floor(Math.random() * this.maxSize);
     return (ret > this.minSize ? ret : this.minSize);
