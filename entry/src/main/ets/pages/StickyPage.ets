@@ -1,21 +1,20 @@
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { CommonConstants } from '../CommonConstants';
 import { WaterFlowDataSource } from '../utils/WaterFlowDataSource';
+import cryptoFramework from '@ohos.security.cryptoFramework';
+import { secureRandomInt } from '../utils/SecureRandom';
 
 const TAG = 'StickyPage';
 
 @Component
 export struct StickyPage {
-  @State arr: number[] = CommonConstants.ARR;
-  @State colors: number[] = CommonConstants.COLORS;
-  @State scrollOffset: number = 0;
-  @State minSize: number = 80;
-  @State maxSize: number = 180;
-  @State sections: WaterFlowSections = new WaterFlowSections();
+  minSize: number = 80;
+  maxSize: number = 180;
+  sections: WaterFlowSections = new WaterFlowSections();
+  private itemWidthArray: number[] = [];
   scroller: Scroller = new Scroller();
   dataCount: number = 100;
   dataSource: WaterFlowDataSource = new WaterFlowDataSource();
-  private itemWidthArray: number[] = [];
   private itemHeightArray: number[] = [];
   oneColumnSection: SectionOptions = {
     itemsCount: 3,
@@ -29,7 +28,7 @@ export struct StickyPage {
       right: 0
     },
     onGetItemMainSizeByIndex: (index: number) => {
-      if (index == 1) {
+      if (index === 1) {
         return 100;
       } else {
         return 200;
@@ -44,9 +43,9 @@ export struct StickyPage {
     }
   };
 
-  getSize() {
-    let ret = Math.floor(Math.random() * this.maxSize);
-    return (ret > this.minSize ? ret : this.minSize);
+  getSize(): number {
+    const ret = secureRandomInt(0, this.maxSize);
+    return ret > this.minSize ? ret : this.minSize;
   }
 
   setItemSizeArray() {
@@ -62,7 +61,7 @@ export struct StickyPage {
     let count = 0;
     let oneOrTwo = 0;
     while (count < this.dataCount) {
-      if (oneOrTwo++ % 2 == 0) {
+      if (oneOrTwo++ % 2 === 0) {
         sectionOptions.push(this.oneColumnSection);
         count += this.oneColumnSection.itemsCount;
       } else {
@@ -82,22 +81,20 @@ export struct StickyPage {
 
 @Component
 struct WaterFlowComponent {
-  @State minSize: number = 80;
-  @State maxSize: number = 180;
-  @State colors: number[] = [0xFFC0CB, 0xDA70D6, 0x6B8E23, 0x6A5ACD, 0x00FFFF, 0x00FF7F];
-  dataSource: WaterFlowDataSource = new WaterFlowDataSource();
+  minSize: number = 80;
+  maxSize: number = 180;
+  colors: number[] = [0xFFC0CB, 0xDA70D6, 0x6B8E23, 0x6A5ACD, 0x00FFFF, 0x00FF7F];
   scroller: Scroller = new Scroller();
+  dataSource: WaterFlowDataSource = new WaterFlowDataSource();
   private itemWidthArray: number[] = [];
   private itemHeightArray: number[] = [];
-  @State searchInput: string = '';
+  searchInput: string = '';
 
-  // Calculate the width and height of a water flow item.
   getSize() {
-    let ret = Math.floor(Math.random() * this.maxSize);
+    let ret = secureRandomInt(0,this.maxSize);
     return (ret > this.minSize ? ret : this.minSize);
   }
 
-  // Set the width and height array of the water flow item.
   setItemSizeArray() {
     for (let i = 0; i < 100; i++) {
       this.itemWidthArray.push(this.getSize());
@@ -110,75 +107,50 @@ struct WaterFlowComponent {
   }
 
   build() {
-    Row({ space: 0 }) {
-
-      WaterFlow({ scroller: this.scroller }) {
-
+    Column({ space: 2 }) {
+      WaterFlow() {
         LazyForEach(this.dataSource, (item: number) => {
           FlowItem() {
-            this.ImageRelative(item)
+            ReusableFlowItem({ item: item })
           }
           .onAppear(() => {
-            if (item + 20 == this.dataSource.totalCount()) {
+            if (item + 20 >= this.dataSource.totalCount()) {
               for (let i = 0; i < 100; i++) {
                 this.dataSource.addLastItem()
               }
             }
           })
-          .width(CommonConstants.FULL_WIDTH)
+          .width('100%')
           .height(this.itemHeightArray[item % 100])
-          .backgroundColor(Color.White)
+          .backgroundColor(this.colors[item % 5])
         }, (item: string) => item)
-
-
       }
-      .columnsTemplate('repeat(auto-fill,80)')
-      .columnsGap(5)
-      .rowsGap(3)
       .cachedCount(10)
-      .height('200%')
-      .width('145%')
-
-    }
-  }
-
-  @Builder
-  ImageRelative(item: number) {
-    RelativeContainer() {
-
-      Image($rawfile(`sections/${item % 4}.jpg`))
-        .objectFit(ImageFit.Cover)
-        .width(CommonConstants.FULL_WIDTH)
-        // .layoutWeight(1)
-        .borderRadius($r('app.float.sections_item_radius'))
-        .alignRules({
-          top: { anchor: '__container__', align: VerticalAlign.Top },
-          bottom: { anchor: '__container__', align: VerticalAlign.Bottom },
-          left: { anchor: '__container__', align: HorizontalAlign.Start },
-          right: { anchor: '__container__', align: HorizontalAlign.End }
-        })
-        .id('image');
-
-      // Stack() {
-      // }
-      // .linearGradient({
-      //   angle: 0,
-      //   colors: [[$r('app.color.linearGradient_first_color'), 0.0],
-      //     [$r('app.color.linearGradient_last_color'), 1.0]]
-      // })
-      // .width(CommonConstants.FULL_WIDTH)
-      // .height($r('app.float.sections_item_blur_height'))
-      // .borderRadius($r('app.float.sections_item_radius'))
-      // .hitTestBehavior(HitTestMode.None)
-      // .alignRules({
-      //   bottom: { anchor: '__container__', align: VerticalAlign.Bottom },
-      //   left: { anchor: '__container__', align: HorizontalAlign.Start },
-      //   right: { anchor: '__container__', align: HorizontalAlign.End }
-      // })
-      // .id('mask');
-
+      .columnsTemplate('1fr 1fr')
+      .columnsGap(10)
+      .rowsGap(5)
+      .width('100%')
+      .height('100%')
     }
   }
 }
 
+@Reusable
+@Component
+struct ReusableFlowItem {
+  @State item: number = 0
 
+  aboutToReuse(params: Record<string, ESObject>) {
+    this.item = params.item;
+  }
+
+  build() {
+    Column() {
+      Text(`N ${this.item}`).fontSize(12).height('16')
+      Image($rawfile(`sections/${this.item % 4}.jpg`))
+        .objectFit(ImageFit.Fill)
+        .width('100%')
+        .layoutWeight(1)
+    }
+  }
+}

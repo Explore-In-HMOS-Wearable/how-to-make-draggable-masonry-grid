@@ -5,8 +5,7 @@ import { ExplorePage } from './ExplorePage';
 struct NavigationRouter {
   pageInfos: NavPathStack = new NavPathStack()
   private tabsController: TabsController = new TabsController();
-  @State currentIndex: number = 0;
-
+ 
   build() {
     Navigation() {
       ExplorePage()

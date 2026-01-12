@@ -7,8 +7,7 @@ export function ExplorePageBuilder(name: string, param: Object) {
 
 @Component
 struct ExplorePage {
-  @State searchInput: string = '';
-  @State isRefreshing: boolean = false
+  
   scroller: Scroller = new Scroller()
   pageInfos: NavPathStack = new NavPathStack();
 
